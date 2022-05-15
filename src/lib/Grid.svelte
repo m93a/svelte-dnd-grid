@@ -9,29 +9,56 @@
 		y: number;
 	}
 
-	export interface Layout extends Size, Position {
+	export interface Layout extends Size, Position {}
 
-    }
-
-    export interface ItemCommons extends Partial<Layout>{
-        key: unknown;
-    }
+	export interface ItemCommons {
+		key: unknown;
+		movable?: boolean;
+		resizable?: boolean;
+		maxSize?: Partial<Size>;
+		minSize?: Partial<Size>;
+	}
 </script>
 
 <script lang="ts">
+	// input props
 	type ItemData = $$Generic;
 	type Item = ItemData & ItemCommons;
 	export let items: Item[];
 
+	export let cols: number = 2;
+	export let maxRows: number = Infinity;
+	export let gravity: boolean = true;
+	export let resetStyles: boolean = false;
+	export let forgetUnusedLayouts: boolean = true;
+
 	let className: string = '';
-    export { className as class };
+	export { className as class };
+
+	// bind props
+	export let layouts = new Map<unknown, Layout>();
+
+	// update
+	function updateLayout() {}
+
+	function layoutFor(item: Item): Layout {
+		const layout = layouts.get(item.key);
+		if (layout) return layout;
+	}
 </script>
 
-<div class={'svelte-grid-outer ' + className}>
-	{#each items as item}
-		{#key item.key}
-			<slot key={item.key} {item} />
-		{/key}
+<div
+	class={className}
+	class:svelte-grid-outer={resetStyles}
+	style:grid-cols={resetStyles ? '' : cols}
+>
+	{#each items as item (item.key)}
+		<div
+			style:grid-column={`${layoutFor(item).x} / ${layoutFor(item).x + layoutFor(item).w}`}
+			style:grid-row={`${layoutFor(item).y} / ${layoutFor(item).y + layoutFor(item).h}`}
+		>
+			<slot key={item.key} {item}>{item.key}</slot>
+		</div>
 	{/each}
 </div>
 
